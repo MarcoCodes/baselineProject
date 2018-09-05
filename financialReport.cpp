@@ -168,7 +168,7 @@ void getTotals(float payRate[], float hrsWkd[], float grossPay[], float taxAmt[]
 }
 
 /*I[]			P[X]			O[]*/
-//	Input values: Floats: (values[]).
+//	Input values: Float: values[].
 //
 //	Output values: Float: return total.
 //                 
