@@ -1,16 +1,16 @@
 /*
-			Name:    Marco Martinez
-			Project: financialReport.cpp
-			Purpose: Calculate and display a financial report in alphabetical order based on last name.
-					 Format output according to assignment sheet.
-			Date:    8/30/2018
+	Name:    Marco Martinez
+	Project: financialReport.cpp
+	Purpose: Calculate and display a financial report in alphabetical order based on last name.
+		 Format output according to assignment sheet.
+	Date:    8/30/2018
 
-			Software Change Record
-			Date			Who				What
-			8/30			Marco M.		Basic Structure (Input name & numbers, output name & calculated numbers)
-			8/31			Marco M.		Segment input and processing sections into functions
-			9/2				Marco M.		Implement accumulation for arrays
-			9/3				Marco M.		Implement the sorting of data by last name and complete formatting of output text
+	Software Change Record
+	Date			Who				What
+	8/30			Marco M.		Basic Structure (Input name & numbers, output name & calculated numbers)
+	8/31			Marco M.		Segment input and processing sections into functions
+	9/2			Marco M.		Implement accumulation for arrays
+	9/3			Marco M.		Implement the sorting of data by last name and complete formatting of output text
 */
 
 /*---Libraries---*/
@@ -43,7 +43,7 @@ void bubbleFloat(float valueFloat[], int i, int j);
 void concantenateName(string firstName[], string lastName[], string fullName[]);
 void displayInfo(string fullName[], float payRate[], float hrsWkd[], float netPay[], float totPayRate, float totHrsWkd, float totGrossPay, float totTaxAmt, float totNetPay, float avgPayRate, float avgHrsWkd, float avgGrossPay, float avgTaxAmt, float avgNetPay);
 
-	/*----The Main Module----*/
+/*----The Main Module----*/
 int main() {
 
 	/*----Variable Declaration----*/
@@ -52,12 +52,12 @@ int main() {
 	string  lastName[EMPS];
 	string  fullName[EMPS];
 
-	/*--Employee Financials--   --Totals--          --Averages--*/				
-	float   payRate[EMPS],		totPayRate,			avgPayRate,
-			hrsWkd[EMPS],		totHrsWkd,			avgHrsWkd,
-			grossPay[EMPS],		totGrossPay,		avgGrossPay,
-			taxAmt[EMPS],		totTaxAmt,			avgTaxAmt,
-			netPay[EMPS],		totNetPay,			avgNetPay;
+	/*--Employee Financials--   --Totals--     --Averages--*/				
+	float   payRate[EMPS],	    totPayRate,	     avgPayRate,
+		hrsWkd[EMPS],	    totHrsWkd,	     avgHrsWkd,
+		grossPay[EMPS],	    totGrossPay,     avgGrossPay,
+		taxAmt[EMPS],	    totTaxAmt,	     avgTaxAmt,
+		netPay[EMPS],	    totNetPay,	     avgNetPay;
 
 	/*---Body---*/
 	getInfo(firstName, lastName, payRate, hrsWkd);
@@ -69,8 +69,8 @@ int main() {
 	/*I[X]			P[]			O[]*/
 //	Input values: none.
 //
-//	Output values: strings (firstName[], lastName[])
-//                 floats  (payRate[], hrsWkd[])
+//	Output values: Strings: (firstName[], lastName[])
+//                 	Floats:  (payRate[], hrsWkd[])
 //
 //	Input/ Output values: none.
 //
