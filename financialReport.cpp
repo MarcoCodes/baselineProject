@@ -69,8 +69,8 @@ int main() {
 	/*I[X]			P[]			O[]*/
 //	Input values: none.
 //
-//	Output values: Strings: (firstName[], lastName[])
-//                 	Floats:  (payRate[], hrsWkd[])
+//	Output values: Strings: (firstName[], lastName[]).
+//                 	Floats:  (payRate[], hrsWkd[]).
 //
 //	Input/ Output values: none.
 //
