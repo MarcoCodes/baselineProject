@@ -63,8 +63,6 @@ int main() {
 	accumulate();
 	sortData();
 	printReport();
-
-	std::cin.get();
 }
 
 /*---Function Definitions---*/
@@ -223,4 +221,5 @@ void printReport() {
 																					  << std::setw(12) << total.totGrossPay / 5
 																					  << std::setw(12) << total.totTaxAmt / 5
 																					  << std::setw(11) << total.totNetPay / 5 << std::endl;
+	system("pause>nul");
 }
