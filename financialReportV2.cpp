@@ -9,11 +9,11 @@
 
 */
 /*---Libraries---*/
-#include <iostream>  // Allows cin, cout
+#include <iostream>      // Allows cin, cout
 #include <iomanip>	 // Allows setw, setprecision, fixed
 #include <string>	 // Allows strings
-#include <cctype>    // Allows isalpha
-#include <algorithm> // Allows all_of
+#include <cctype>        // Allows isalpha
+#include <algorithm>     // Allows all_of
 
 /*---Constant Definition---*/
 #define EMPNUM 5             // Controls amount of employees to enter
@@ -25,18 +25,18 @@
 struct employeeRecord {
 	std::string  fullName;
 	float        payRate,
-				 hrsWkd,
-				 grossPay,
-				 taxAmt,
-				 netPay;
+		     hrsWkd,
+		     grossPay,
+	             taxAmt,
+		     netPay;
 } employee[EMPNUM];
 
 struct accumulators {
 	float	totPayRate,
-			totHrsWkd,
-			totGrossPay,
-			totTaxAmt,
-			totNetPay;
+		totHrsWkd,
+		totGrossPay,
+		totTaxAmt,
+		totNetPay;
 } total;
 
 /*---Function Declarations---*/
