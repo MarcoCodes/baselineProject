@@ -10,7 +10,7 @@
 */
 /*---Libraries---*/
 #include <iostream>      // Allows cin, cout
-#include <iomanip>	 // Allows setw, setprecision, fixed
+#include <iomanip>	 // Allows setw, setprecision, fixed, left, right
 #include <string>	 // Allows strings
 #include <cctype>        // Allows isalpha
 #include <algorithm>     // Allows all_of
