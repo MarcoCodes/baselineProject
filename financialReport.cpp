@@ -5,26 +5,26 @@
 
 	IPO Chart
 	=================================================================================================
-	Variable		Input(s)	Processed	Output(s)
+	Variable		Input(s)		Processed		Output(s)
 	-------------------------------------------------------------------------------
 
 	lastName(S)		Yes			No			Yes
-	firstName(S)	Yes			No			Yes
+	firstName(S)		Yes			No			Yes
 	payRate(R)		Yes			No			Yes
 	hrsWkd	(R)		Yes			No			Yes
 	grossPay(R)		No			Yes			Yes
 	taxAmt(R)		No			Yes			Yes
 	netPay(R)		No			Yes			Yes
 	empNum(I)		No			Yes			No
-	totPayRate(R)	No			Yes			Yes
-	totHrsWkd(R)	No			Yes			Yes
-	totGrossPay(R)	No			Yes			Yes
-	totTaxAmt(R)	No			Yes			Yes
-	totNetPay(R)	No			Yes			Yes
+	totPayRate(R)		No			Yes			Yes
+	totHrsWkd(R)		No			Yes			Yes
+	totGrossPay(R)		No			Yes			Yes
+	totTaxAmt(R)		No			Yes			Yes
+	totNetPay(R)		No			Yes			Yes
 	EMPMAX(IC)		No			Yes			No
-	REGULARHOURS(IC)No			Yes			No
+	REGULARHOURS(IC)	No			Yes			No
 	TAXRATE(RC)		No			Yes			No
-	OVERTIMERATE(RC)No			Yes			No
+	OVERTIMERATE(RC)	No			Yes			No
 
 
 	Design Decomposition
@@ -51,8 +51,8 @@
 
 /*---Libraries---*/
 #include <iostream>      // Allows cin, cout
-#include <iomanip>		 // Allows setw, setprecision, fixed, left, right
-#include <string>		 // Allows strings
+#include <iomanip>	 // Allows setw, setprecision, fixed, left, right
+#include <string>	 // Allows strings
 #include <cctype>        // Allows isalpha
 #include <algorithm>     // Allows all_of
 #include <fstream>       // Allows for file manipulation
@@ -66,12 +66,12 @@
 /*---Structure Definitions---*/
 typedef struct employeeRecord {
 	std::string	firstName,
-				lastName;
+			lastName;
 	float		payRate,
-				hrsWkd,
-				grossPay,
-				taxAmt,
-				netPay;
+			hrsWkd,
+			grossPay,
+			taxAmt,
+			netPay;
 } employeeRecord;
 
 typedef struct totalRecord {
