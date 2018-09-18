@@ -1,417 +1,322 @@
 /*
 	Name:    Marco Martinez
 	Project: financialReport.cpp
-	Purpose: Calculate and display a financial report in alphabetical order based on last name.
-		 Format output according to assignment sheet.
-	Date:    8/30/2018
+	Purpose: Tax program intended to output financial details.
 
+	IPO Chart
+	=================================================================================================
+	Variable		Input(s)	Processed	Output(s)
+	-------------------------------------------------------------------------------
+
+	lastName(S)		Yes			No			Yes
+	firstName(S)	Yes			No			Yes
+	payRate(R)		Yes			No			Yes
+	hrsWkd	(R)		Yes			No			Yes
+	grossPay(R)		No			Yes			Yes
+	taxAmt(R)		No			Yes			Yes
+	netPay(R)		No			Yes			Yes
+	empNum(I)		No			Yes			No
+	totPayRate(R)	No			Yes			Yes
+	totHrsWkd(R)	No			Yes			Yes
+	totGrossPay(R)	No			Yes			Yes
+	totTaxAmt(R)	No			Yes			Yes
+	totNetPay(R)	No			Yes			Yes
+	EMPMAX(IC)		No			Yes			No
+	REGULARHOURS(IC)No			Yes			No
+	TAXRATE(RC)		No			Yes			No
+	OVERTIMERATE(RC)No			Yes			No
+
+
+	Design Decomposition
+	=================================================================================================
+
+	3.0 Payroll
+		3.1 PrintReportHeadings (inout myFile as File)
+		3.2 InitializeAccumulators (inout totals as Record)
+		3.3 InputEmployeeData (inout myEmployees as Array, inout empNum as Integer)
+			3.3.1 ValidateString (inout name as String)
+			3.3.2 ValidateFloat (inout value as Real)
+		3.4 CalculateGross (inout myEmployees as Array, in empNum as Integer)
+		3.5 CalculateTax (inout myEmployees as Array, in empNum as Integer)
+		3.6 CalculateNetPay (inout myEmployees as Array, in empNum as Integer)
+		3.7 Accumulate(in myEmployees as Array, in empNum as Integer, inout totals as Record)
+		3.8 SortData (inout myEmployees as Array, in empNum as Integer)
+		3.9 PrintReport (in myEmployees as Array, in empNum as Integer, in totals as Record, inout myFile as File)
+
+	Date:    8/30/2018
+	
 	Software Change Record
-	Date			Who				What
-	8/30			Marco M.		Basic Structure (Input name & numbers, output name & calculated numbers)
-	8/31			Marco M.		Segment input and processing sections into functions
-	9/2			Marco M.		Implement accumulation for arrays
-	9/3			Marco M.		Implement the sorting of data by last name and complete formatting of output text
+	Date            Who                   What
 */
 
 /*---Libraries---*/
-#include <iostream>
-#include <iomanip>
-#include <string>
+#include <iostream>      // Allows cin, cout
+#include <iomanip>		 // Allows setw, setprecision, fixed, left, right
+#include <string>		 // Allows strings
+#include <cctype>        // Allows isalpha
+#include <algorithm>     // Allows all_of
+#include <fstream>       // Allows for file manipulation
 
-/*---Constant Declarations---*/
-const int EMPS = 5;               // Controls amount of employs to enter
-const float TAXRATE = 0.15F;      // Rate of tax as subject to law
-const float OVERTIMERATE = 1.5F;  // 150% pay amount for overtime work
-const int REGULARHOURS = 40;      // Number of hours in a normal work day
+/*---Constant Definitions---*/
+#define EMPMAX 1000          // Controls max amount of employees to enter
+#define REGULARHOURS 40      // Number of hours in a normal work day
+#define TAXRATE 0.15F        // Rate of tax as subject to law
+#define OVERTIMERATE 1.5F    // 150% pay amount for overtime work
 
-using namespace std;
+/*---Structure Definitions---*/
+typedef struct employeeRecord {
+	std::string	firstName,
+				lastName;
+	float		payRate,
+				hrsWkd,
+				grossPay,
+				taxAmt,
+				netPay;
+} employeeRecord;
+
+typedef struct totalRecord {
+	float	totPayRate,
+			totHrsWkd,
+			totGrossPay,
+			totTaxAmt,
+			totNetPay;
+} totalRecord;
 
 /*---Function Declarations---*/
-void getInfo(string firstName[], string lastName[], float payRate[], float hrsWkd[]);
-string determineEmp(int value);
-void calcInfo(string firstName[], string lastName[], string fullName[], float payRate[], float hrsWkd[], float grossPay[], float taxAmt[], float netPay[], float &totPayRate, float &totHrsWkd, float &totGrossPay, float &totTaxAmt, float &totNetPay, float &avgPayRate, float &avgHrsWkd, float &avgGrossPay, float &avgTaxAmt, float &avgNetPay);
-void getTotals(float payRate[], float hrsWkd[], float grossPay[], float taxAmt[], float netPay[], float &totPayRate, float &totHrsWkd, float &totGrossPay, float &totTaxAmt, float &totNetPay);
-float calcTotal(float values[]);
-void getAvgs(float totPayRate, float totHrsWkd, float totGrossPay, float totTaxAmt, float totNetPay, float &avgPayRate, float &avgHrsWkd, float &avgGrossPay, float &avgTaxAmt, float &avgNetPay);
-float calcAvg(float value);
-void calcGrossPay(float payRate[], float hrsWkd[], float grossPay[]);
-void calcTaxAmt(float grossPay[], float taxAmt[]);
-void calcNetPay(float grossPay[], float taxAmt[], float netPay[]);
-void sortInfo(string firstName[], string lastName[], float payRate[], float hrsWkd[], float grossPay[], float taxAmt[], float netPay[]);
-void bubbleString(string valueString[], int i, int j);
-void bubbleFloat(float valueFloat[], int i, int j);
-void concantenateName(string firstName[], string lastName[], string fullName[]);
-void displayInfo(string fullName[], float payRate[], float hrsWkd[], float netPay[], float totPayRate, float totHrsWkd, float totGrossPay, float totTaxAmt, float totNetPay, float avgPayRate, float avgHrsWkd, float avgGrossPay, float avgTaxAmt, float avgNetPay);
+void printReportHeadings(std::ofstream& myFile);
+void initializeAccumulators(totalRecord& totals);
+void inputEmployeeData(employeeRecord myEmployees[], unsigned short int& empNum);
+std::string validateString(std::string name);
+float validateFloat(float value);
+void calculateGross(employeeRecord myEmployees[], unsigned short int empNum);
+void calculateTax(employeeRecord myEmployees[], unsigned short int empNum);
+void calculateNet(employeeRecord myEmployees[], unsigned short int empNum);
+void accumulate(employeeRecord myEmployees[], unsigned short int empNum, totalRecord& totals);
+void sortData(employeeRecord myEmployees[], unsigned short int empNum);
+void printReport(employeeRecord myEmployees[], unsigned short int empNum, totalRecord totals, std::ofstream& myFile);
 
-/*----The Main Module----*/
+//3.0 Payroll
 int main() {
+	employeeRecord myEmployees[EMPMAX];
+	totalRecord totals;
+	std::ofstream myFile("report.txt");
+	unsigned short int empNum = 0;
 
-	/*----Variable Declaration----*/
-	/*--Employee Name Data--*/
-	string  firstName[EMPS];
-	string  lastName[EMPS];
-	string  fullName[EMPS];
-
-	/*--Employee Financials--   --Totals--     --Averages--*/				
-	float   payRate[EMPS],	    totPayRate,	     avgPayRate,
-		hrsWkd[EMPS],	    totHrsWkd,	     avgHrsWkd,
-		grossPay[EMPS],	    totGrossPay,     avgGrossPay,
-		taxAmt[EMPS],	    totTaxAmt,	     avgTaxAmt,
-		netPay[EMPS],	    totNetPay,	     avgNetPay;
-
-	/*---Body---*/
-	getInfo(firstName, lastName, payRate, hrsWkd);
-	calcInfo(firstName, lastName, fullName, payRate, hrsWkd, grossPay, taxAmt, netPay, totPayRate, totHrsWkd, totGrossPay, totTaxAmt, totNetPay, avgPayRate, avgHrsWkd, avgGrossPay, avgTaxAmt, avgNetPay);
-	displayInfo(fullName, payRate, hrsWkd, netPay, totPayRate, totHrsWkd, totGrossPay, totTaxAmt, totNetPay, avgPayRate, avgHrsWkd, avgGrossPay, avgTaxAmt, avgNetPay);
+	printReportHeadings(myFile);
+	initializeAccumulators(totals);
+	inputEmployeeData(myEmployees, empNum);
+	calculateGross(myEmployees, empNum);
+	calculateTax(myEmployees, empNum);
+	calculateNet(myEmployees, empNum);
+	accumulate(myEmployees, empNum, totals);
+	sortData(myEmployees, empNum);
+	printReport(myEmployees, empNum, totals, myFile);
 }
-	/*----Functions----*/
 
-	/*I[X]			P[]			O[]*/
-//	Input values: none.
-//
-//	Output values: Strings: (firstName[], lastName[]).
-//                 	Floats:  (payRate[], hrsWkd[]).
-//
-//	Input/ Output values: none.
-//
-//	Purpose:
-//
-//	This function outputs text requesting the user to input values for four different arrays.
-//	It then records that information into each of the four arrays.
-//	It also utilizes determineEmp to determine which employee is being entered.
-//	This array utilizes the constant EMPS as a reference for the number of employees.
-//
-void getInfo(string firstName[], string lastName[], float payRate[], float hrsWkd[]) {
-	for (int i = 0; i < EMPS; i++) {
-		cout << "Please enter the " << determineEmp(i) << " employee's first name here: ";
-		cin >> firstName[i];
-
-		cout << "Please enter the " << determineEmp(i) << " employee's last name here: ";
-		cin >> lastName[i];
-
-		cout << "Please enter the " << determineEmp(i) << " employee's hourly pay here: ";
-		cin >> payRate[i];
-
-		cout << "Please enter the " << determineEmp(i) << " employee's number of worked hours: ";
-		cin >> hrsWkd[i];
-
-		cout << endl;
+	/*---Function Definitions---*/
+//3.1 PrintReportHeadings (inout myFile as File)
+void printReportHeadings(std::ofstream& myFile) {
+	if (myFile.is_open()) {
+		myFile << "==================================================================================================" << std::endl;
+		myFile << "                                  YOUR FINANCIAL REPORT ANALYSIS                                  " << std::endl;
+		myFile << "==================================================================================================" << std::endl;
+		myFile << std::endl;
+	}
+	else {
+		std::cout << "Error. File inaccesible." << std::endl;
+		std::cout << "Please confirm \"report.txt\" access." << std::endl;
+		std::cin.get();
+		std::exit(0);
 	}
 }
 
-/*I[]			P[X]			O[]*/
-//	Input values: Int: value.
-//
-//	Output values: String: return string.
-//                 
-//	Input/ Output values: none.
-//
-//	Purpose:
-//
-//	This function inputs the value of a loop and utilizes that value to
-//	determine which employee the user is attempting to enter.
-//
-string determineEmp(int value) {
-	if (value == 0)
-		return "first";
-	else if (value == 1)
-		return "second";
-	else if (value == 2)
-		return "third";
-	else if (value == 3)
-		return "fourth";
-	else if (value == 4)
-		return "fifth";
+//3.2 InitializeAccumulators (inout totals as Record)
+void initializeAccumulators(totalRecord& totals) {
+	totals.totPayRate = 0.00F;
+	totals.totHrsWkd = 0.00F;
+	totals.totGrossPay = 0.00F;
+	totals.totTaxAmt = 0.00F;
+	totals.totNetPay = 0.00F;
 }
 
-/*I[]			P[X]			O[]*/
-//	Input values: Strings: (firstName[], lastName[]).
-//
-//	Output values: none.
-//                 
-//	Input/ Output values: Floats: (payRate[], fhrsWkd[], grossPay[], taxAmt[], netPay[], totPayRate, totHrsWkd, totGrossPay,
-//                                 totTaxAmt, totNetPay, avgPayRate, avgHrsWkd, avgGrossPay, avgTaxAmt, avgNetPay).
-//						  String: fullName[].
-//	Purpose:
-//	
-//	This function is a hub function for various subfunctions. 
-//	This function is intended to segment the entirety of the calculations for the program.
-//
-void calcInfo(string firstName[], string lastName[], string fullName[], float payRate[], float hrsWkd[], float grossPay[], float taxAmt[], float netPay[], float &totPayRate, float &totHrsWkd, float &totGrossPay, float &totTaxAmt, float &totNetPay, float &avgPayRate, float &avgHrsWkd, float &avgGrossPay, float &avgTaxAmt, float &avgNetPay) {
-	calcGrossPay(payRate, hrsWkd, grossPay);
-	calcTaxAmt(grossPay, taxAmt);
-	calcNetPay(grossPay, taxAmt, netPay);
-	getTotals(payRate, hrsWkd, grossPay, taxAmt, netPay, totPayRate, totHrsWkd, totGrossPay, totTaxAmt, totNetPay);
-	getAvgs(totPayRate, totHrsWkd, totGrossPay, totTaxAmt, totNetPay, avgPayRate, avgHrsWkd, avgGrossPay, avgTaxAmt, avgNetPay);
-	sortInfo(firstName, lastName, payRate, hrsWkd, grossPay, taxAmt, netPay);
-	concantenateName(firstName, lastName, fullName);
+//3.3 InputEmployeeData (inout myEmployees as Array, inout empNum as Integer)
+void inputEmployeeData(employeeRecord myEmployees[], unsigned short int& empNum) {
+	char c = 'y';
+
+	while ( c != 'n' && c != 'N') {
+		std::cout << "Please enter the employee's first name here: ";
+		std::cin >> myEmployees[empNum].firstName;
+		myEmployees[empNum].firstName = validateString(myEmployees[empNum].firstName);
+
+		std::cout << "Please enter the employee's last name here: ";
+		std::cin >> myEmployees[empNum].lastName;
+		myEmployees[empNum].lastName = validateString(myEmployees[empNum].lastName);
+
+		std::cout << "Please enter the employee's hourly pay here: ";
+		std::cin >> myEmployees[empNum].payRate;
+		myEmployees[empNum].payRate = validateFloat(myEmployees[empNum].payRate);
+
+		std::cout << "Please enter the employee's number of worked hours: ";
+		std::cin >> myEmployees[empNum].hrsWkd;
+		myEmployees[empNum].hrsWkd = validateFloat(myEmployees[empNum].hrsWkd);
+
+		empNum++;
+
+		if (empNum >= EMPMAX - 1) {
+			std::cout << "You have hit the maximum amount of employees to enter." << std::endl;
+			return;
+		}
+
+		std::cout << "Would you like to continue? (Y/N) ";
+		std::cin >> c;
+
+		while (c != 'n' && c != 'N' && c != 'y' && c != 'Y') {
+			std::cout << "Invalid input." << std::endl;
+			std::cout << "Please enter either a 'y' or 'n': ";
+			std::cin >> c;
+		}
+
+		std::cout << std::endl;
+	}
 }
 
-/*I[]			P[X]			O[]*/
-//	Input values: Floats: (payRate[], fhrsWkd[], grossPay[], taxAmt[], netPay[]).
-//
-//	Output values: Floats: (totPayRate, totHrsWkd, totGrossPay,totTaxAmt, totNetPay).
-//                 
-//	Input/ Output values: none.
-//                           
-//	Purpose:
-//	
-//	This function gathers all of the total values in a compact way for assignment.
-//	This function is reliant upon calcTotal as calcTotal processes the values.
-//
-void getTotals(float payRate[], float hrsWkd[], float grossPay[], float taxAmt[], float netPay[], float &totPayRate, float &totHrsWkd, float &totGrossPay, float &totTaxAmt, float &totNetPay) {
-	totPayRate = calcTotal(payRate);
-	totHrsWkd = calcTotal(hrsWkd);
-	totGrossPay = calcTotal(grossPay);
-	totTaxAmt = calcTotal(taxAmt);
-	totNetPay = calcTotal(netPay);
-}
+//3.3.1 ValidateString (inout name as String)
+//REQUIRES C++11 COMPILER COMPATIBILITY
+std::string validateString(std::string name) {
+	unsigned short int i = 0;
 
-/*I[]			P[X]			O[]*/
-//	Input values: Float: values[].
-//
-//	Output values: Float: return total.
-//                 
-//	Input/ Output values: none.
-//                           
-//	Purpose:
-//	
-//	This function accumulates the values with each element of an array and stores it within total.
-//	This function is reliant upon accurate data being received from getTotals.
-//
-float calcTotal(float values[]) {
-	float total = 0.0;
+	while (!(std::all_of(name.begin(), name.end(), [](char c) { return (std::isalpha(c)); }))) {
+		std::cout << "Please enter with alphabetical characters only: ";
+		std::cin >> name;
 
-	for (int i = 0; i < EMPS; i++) {
-		total += values[i];
+		if ((std::all_of(name.begin(), name.end(), [](char c) { return (std::isalpha(c)); })))
+			return name;
+		else if (i >= 2)
+			return name = "Default";
+
+		i++;
 	}
 
-	return total;
+	return name;
 }
 
-/*I[]			P[X]			O[]*/
-//	Input values: Floats: (totPayRate, totHrsWkd, totGrossPay, totTaxAmt, totNetPay).
-//
-//	Output values: Floats: (avgPayRate, avgHrsWkd, avgGrossPay, avgTaxAmt, avgNetPay).
-//                 
-//	Input/ Output values: none.
-//                           
-//	Purpose:
-//	
-//	This function gathers all average values in a compact way for assignment.
-//	This function is reliant upon accurate data being received from calcAvg.
-//
-void getAvgs(float totPayRate, float totHrsWkd, float totGrossPay, float totTaxAmt, float totNetPay, float &avgPayRate, float &avgHrsWkd, float &avgGrossPay, float &avgTaxAmt, float &avgNetPay) {
-	avgPayRate = calcAvg(totPayRate);
-	avgHrsWkd = calcAvg(totHrsWkd);
-	avgGrossPay = calcAvg(totGrossPay);
-	avgTaxAmt = calcAvg(totTaxAmt);
-	avgNetPay = calcAvg(totNetPay);
-}
+//3.3.2 ValidateFloat (inout value as Real)
+float validateFloat(float value) {
+	unsigned short int i = 0;
 
-/*I[]			P[X]			O[]*/
-//	Input values: Floats: value.
-//
-//	Output values: Float: return value.
-//                 
-//	Input/ Output values: none.
-//                           
-//	Purpose:
-//	
-//	This function utilizes the accumulate value and the number of employees to calculate the average.
-//	This function is reliant upon accurate data being received from getAvgs.
-//
-float calcAvg(float value) {
-	value /= EMPS;
+	while (value < 0) {
+		std::cout << "Please enter a value greater than or equal to zero: ";
+		std::cin >> value;
+
+		if (value >= 0)
+			return value;
+		else if (i >= 2)
+			return value = 0.00F;
+
+		i++;
+	}
 
 	return value;
 }
 
-/*I[]			P[X]			O[]*/
-//	Input values: Floats: (payRate[], hrsWkd[]).
-//
-//	Output values: Float: grossPay[].
-//                 
-//	Input/ Output values: none.
-//                           
-//	Purpose:
-//	
-//	This function calculates the gross pay of the employee by multiplying the pay rate by hours worked.
-//	This function also determines whether the employee has earned overtime and calculates it into gross pay if necessary.
-//
-void calcGrossPay(float payRate[], float hrsWkd[], float grossPay[]) {
-	for (int i = 0; i < EMPS; i++) {
-		if (hrsWkd[i] <= REGULARHOURS) {
-			grossPay[i] = hrsWkd[i] * payRate[i];
+//3.4 CalculateGross (inout myEmployees as Array, in empNum as Integer)
+void calculateGross(employeeRecord myEmployees[], unsigned short int empNum) {
+	for (unsigned short int i = 0; i < empNum; i++) {
+		if (myEmployees[i].hrsWkd <= REGULARHOURS) {
+			myEmployees[i].grossPay = myEmployees[i].payRate * myEmployees[i].hrsWkd;
 		}
 		else {
-			grossPay[i] = REGULARHOURS * payRate[i];
-			grossPay[i] += (hrsWkd[i] - REGULARHOURS) * payRate[i] * OVERTIMERATE;
+			myEmployees[i].grossPay = REGULARHOURS * myEmployees[i].payRate;
+			myEmployees[i].grossPay += (myEmployees[i].hrsWkd - REGULARHOURS) * myEmployees[i].payRate * OVERTIMERATE;
 		}
 	}
 }
 
-/*I[]			P[X]			O[]*/
-//	Input values: Float: grossPay[].
-//
-//	Output values: Float: taxAmt[].
-//                 
-//	Input/ Output values: none.
-//                           
-//	Purpose:
-//	
-//	This function calculates the tax amount which is dependent upon the constant TAXRATE.
-//	This function stores that value in taxAmt.
-//
-void calcTaxAmt(float grossPay[], float taxAmt[]) {
-	for (int i = 0; i < EMPS; i++) {
-		taxAmt[i] = grossPay[i] * TAXRATE;
+//3.5 CalculateTax (inout myEmployees as Array, in empNum as Integer)
+void calculateTax(employeeRecord myEmployees[], unsigned short int empNum) {
+	for (unsigned short int i = 0; i < empNum; i++) {
+		myEmployees[i].taxAmt = myEmployees[i].grossPay * TAXRATE;
 	}
 }
 
-/*I[]			P[X]			O[]*/
-//	Input values: Floats: (grossPay[], taxAmt[]).
-//
-//	Output values: Float: netPay[].
-//                 
-//	Input/ Output values: none.
-//                           
-//	Purpose:
-//	
-//	This function calculates the net pay amount.
-//	This function stores that value in netPay[].
-//
-void calcNetPay(float grossPay[], float taxAmt[], float netPay[]) {
-	for (int i = 0; i < EMPS; i++) {
-		netPay[i] = grossPay[i] - taxAmt[i];
+//3.6 CalculateNetPay (inout myEmployees as Array, in empNum as Integer)
+void calculateNet(employeeRecord myEmployees[], unsigned short int empNum) {
+	for (unsigned short int i = 0; i < empNum; i++) {
+		myEmployees[i].netPay = myEmployees[i].grossPay - myEmployees[i].taxAmt;
 	}
 }
 
-/*I[]			P[X]			O[]*/
-//	Input values: none.
-//
-//	Output values: none.
-//                 
-//	Input/ Output values: Strings: (firstName, lastName).
-//						  Floats: (payRate, hrsWkd, grossPay, taxAmt, netPay).
-//
-//	Purpose:
-//	
-//	This function sorts all arrays simultaneously through bubblesort.
-//	This function is reliant upon bubbleString and bubbleFloat to allow for accurate data synchronization.
-//
-void sortInfo(string firstName[], string lastName[], float payRate[], float hrsWkd[], float grossPay[], float taxAmt[], float netPay[]) {
+//3.7 Accumulate(in myEmployees as Array, in empNum as Integer, inout totals as Record)
+void accumulate(employeeRecord myEmployees[], unsigned short int empNum, totalRecord& totals) {
+	for (unsigned short int i = 0; i < empNum; i++) {
+		totals.totPayRate += myEmployees[i].payRate;
+		totals.totHrsWkd += myEmployees[i].hrsWkd;
+		totals.totGrossPay += myEmployees[i].grossPay;
+		totals.totTaxAmt += myEmployees[i].taxAmt;
+		totals.totNetPay += myEmployees[i].netPay;
+	}
+}
 
-	for (int i = 1; i < EMPS; i++)
+//3.8 SortData (inout myEmployees as Array, in empNum as Integer)
+void sortData(employeeRecord myEmployees[], unsigned short int empNum) {
+	employeeRecord temp;
+
+	for (unsigned short int i = 1; i < empNum; i++)
 	{
-		for (int j = 0; j < EMPS - 1; j++)
+		for (unsigned short int j = 0; j < empNum - 1; j++)
 		{
-			if (lastName[j] > lastName[j + 1])
+			if (myEmployees[j].lastName > myEmployees[j + 1].lastName)
 			{
-				bubbleString(lastName, i, j);
-				bubbleString(firstName, i, j);
-
-				bubbleFloat(payRate, i, j);
-				bubbleFloat(hrsWkd, i, j);
-				bubbleFloat(grossPay, i, j);
-				bubbleFloat(taxAmt, i, j);
-				bubbleFloat(netPay, i, j);
+				temp = myEmployees[j];
+				myEmployees[j] = myEmployees[j + 1];
+				myEmployees[j + 1] = temp;
 			}
 		}
 	}
 }
 
-/*I[]			P[X]			O[]*/
-//	Input values: Ints: (I, J).
-//
-//	Output values: none.
-//                 
-//	Input/ Output values: String: valueString.						  
-//
-//	Purpose:
-//	
-//	This function compares and sorts strings.
-//	This function is reliant upon sortInfo for accurate array and integer information.
-//
-void bubbleString(string valueString[], int i, int j) {
-	string temp;
-	temp = valueString[j];
-	valueString[j] = valueString[j + 1];
-	valueString[j + 1] = temp;
-}
+//3.9 PrintReport (in myEmployees as Array, in empNum as Integer, in totals as Record, inout myFile as File)
+void printReport(employeeRecord myEmployees[], unsigned short int empNum, totalRecord totals, std::ofstream& myFile) {
+	if (myFile.is_open()) {
+		myFile << std::left << std::setw(38) << "Employee" << std::setw(12) << "        Pay" << std::setw(12) << "      Hours" << std::setw(12) << "      Gross" << std::setw(12) << "      Tax" << std::setw(12) << "       Net" << std::endl;
+		myFile << std::left << std::setw(38) << "Name" << std::setw(12) << "        Rate" << std::setw(12) << "      Worked" << std::setw(12) << "      Pay" << std::setw(12) << "      Amount" << std::setw(12) << "       Pay" << std::endl;
+		myFile << std::left << std::setw(38) << "========" << std::right << std::setw(12) << "====" << std::setw(12) << "======" << std::setw(12) << "===== " << std::setw(12) << "======" << std::setw(12) << "======" << std::endl;
+		myFile << std::endl;
 
-/*I[]			P[X]			O[]*/
-//	Input values: Ints: (I, J).
-//
-//	Output values: none.
-//                 
-//	Input/ Output values: FLoat: valueFloat.						  
-//
-//	Purpose:
-//	
-//	This function compares and sorts floating point values.
-//	This function is reliant upon sortInfo for accurate array and integer information.
-//
-void bubbleFloat(float valueFloat[], int i, int j) {
-	float temp;
-	temp = valueFloat[j];
-	valueFloat[j] = valueFloat[j + 1];
-	valueFloat[j + 1] = temp;
-}
+		for (unsigned short int i = 0; i < empNum; i++) {
+			myFile << std::left << std::setw(38) << myEmployees[i].lastName + ", " + myEmployees[i].firstName << std::setprecision(2) << std::fixed << std::right
+				<< std::setw(12) << myEmployees[i].payRate
+				<< std::setw(12) << myEmployees[i].hrsWkd
+				<< std::setw(12) << myEmployees[i].grossPay
+				<< std::setw(12) << myEmployees[i].taxAmt
+				<< std::setw(12) << myEmployees[i].netPay << std::endl;
+		}
+		myFile << std::endl;
 
-/*I[]			P[X]			O[]*/
-//	Input values: Strings: (firstName[], lastName[]).
-//
-//	Output values: none.
-//                 
-//	Input/ Output values: String: fullName.						  
-//
-//	Purpose:
-//	
-//	This function concanetnates names.
-//	This function is requires accurate first name and last name values.
-//
-void concantenateName(string firstName[], string lastName[], string fullName[]) {
-	for (int i = 0; i < EMPS; i++) {
-		fullName[i] = lastName[i] + ", " + firstName[i];
+		myFile << std::left << std::setw(38) << "Totals " << std::fixed << std::right
+			<< std::setw(12) << totals.totPayRate
+			<< std::setw(12) << totals.totHrsWkd
+			<< std::setw(12) << totals.totGrossPay
+			<< std::setw(12) << totals.totTaxAmt
+			<< std::setw(12) << totals.totNetPay << std::endl;
+
+		myFile << std::left << std::setw(38) << "Averages" << std::fixed << std::right
+			<< std::setw(12) << totals.totPayRate / empNum
+			<< std::setw(12) << totals.totHrsWkd / empNum
+			<< std::setw(12) << totals.totGrossPay / empNum
+			<< std::setw(12) << totals.totTaxAmt / empNum
+			<< std::setw(12) << totals.totNetPay / empNum << std::endl;
+		myFile.close();
+
+		std::cout << "Report creation sucessful." << std::endl;
+		std::cout << "Thank you for using this program!" << std::endl;
+		std::cin.get();
+		std::cin.ignore();
 	}
-}
-
-/*I[]			P[]				O[X]*/
-//	Input values: String: fullName[].
-//				  Floats: (payRate[], hrsWkd[],  netPay[], 
-//						  totPayRate, totHrsWkd, totGrossPay, totTaxAmt, totNetPay, 
-//                        avgPayRate, avgHrsWkd, avgGrossPay, avgTaxAmt, avgNetPay)
-//
-//	Output values: none.
-//                 
-//	Input/ Output values: none.						  
-//
-//	Purpose:
-//	
-//	This function formats and outputs the financial report.
-//	
-//
-void displayInfo(string fullName[], float payRate[], float hrsWkd[],  float netPay[], float totPayRate, float totHrsWkd, float totGrossPay, float totTaxAmt, float totNetPay, float avgPayRate, float avgHrsWkd, float avgGrossPay, float avgTaxAmt, float avgNetPay) {
-	cout << endl;
-	cout << left << setw(25) << "Employee" << setw(12) << "Pay" << setw(12) << "Hours" << setw(12) << "Gross" << setw(12) << "Tax" << setw(12) << "Net" << endl;
-	cout << left << setw(25) << "Name" << setw(12) << "Rate" << setw(12) << "Worked" << setw(12) << "Pay" << setw(12) << "Amount" << setw(12) << "Pay" << endl;
-	cout << left << setw(25) << "========" << setw(12) << "====" << setw(12) << "======" << setw(12) << "===== " << setw(11) << "======" << setw(11) << "======" << endl;
-	cout << endl;
-	
-	for (int i = 0; i < EMPS; i++) {
-		cout << left << setw(25) << fullName[i] 
-			 << setprecision(2) << fixed << right
-			 << setw(5) << payRate[i]
-			 << setw(13) << hrsWkd[i]
-			 << setw(12) << " "
-			 << setw(12) << " "
-			 << setw(11) << netPay[i] << endl;
+	else {
+		std::cout << "Error. File inaccesible." << std::endl;
+		std::cout << "Please confirm \"report.txt\" access." << std::endl;
+		std::cin.get();
+		std::cin.ignore();
 	}
-	cout << endl;
-
-	cout << left << setw(25) << "Totals" << fixed << right << setw(5) << totPayRate << setw(13) << totHrsWkd << setw(12) << totGrossPay << setw(12) << totTaxAmt << setw(11) << totNetPay << endl;
-	cout << left << setw(25) << "Averages" << fixed << right << setw(5) << avgPayRate << setw(13) << avgHrsWkd << setw(12) << avgGrossPay << setw(12) << avgTaxAmt << setw(11) << avgNetPay << endl;
-
-	system("pause>nul");
 }
